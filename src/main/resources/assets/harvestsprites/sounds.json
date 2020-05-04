@@ -1,0 +1,7 @@
+{
+  "hoard_open": {
+    "category": "block",
+    "subtitle": "subtitle.harvestsprites.sprite_hoard",
+    "sounds": ["harvestsprites:sprites"]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "harvestsprites",
+  "pattern": [
+    "CSC",
+    "SBS",
+    "CSC"
+    ],
+  "key": {
+    "S": {
+      "tag": "forge:seeds"
+    },
+    "C": {
+      "tag": "forge:crops"
+    },
+    "B": {
+      "item": "minecraft:barrel"
+    }
+  },
+  "result": {
+    "item": "harvestsprites:sprite_hoard"
+  }
+}

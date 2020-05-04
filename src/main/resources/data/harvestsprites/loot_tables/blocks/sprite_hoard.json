@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "name": "sprite_hoard",
+      "rolls": 1,
+      "entries": [
+        {
+          "name": "harvestsprites:sprite_hoard",
+          "type": "minecraft:item"
+        }
+      ]
+    }
+  ]
+}

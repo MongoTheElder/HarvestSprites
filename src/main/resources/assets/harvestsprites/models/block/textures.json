@@ -1,0 +1,9 @@
+{"textures": {
+"base": "harvestsprites:block/base",
+"pillar": "harvestsprites:block/pillar",
+"candle": "harvestsprites:block/candle",
+"flame": "harvestsprites:block/flame",
+"chain": "harvestsprites:block/chain",
+"cover": "harvestsprites:block/cover",
+"particle": "#flame"
+}}
