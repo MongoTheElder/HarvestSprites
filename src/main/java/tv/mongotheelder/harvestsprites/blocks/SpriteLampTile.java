@@ -16,29 +16,25 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import tv.mongotheelder.harvestsprites.Config;
-import tv.mongotheelder.harvestsprites.network.PacketHandler;
-import tv.mongotheelder.harvestsprites.network.ProgressPacket;
 import tv.mongotheelder.harvestsprites.setup.Registration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public class SpriteLampTile extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
@@ -150,34 +146,57 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         }
     }
 
+    private boolean isSeedy(ItemStack itemStack) {
+        ResourceLocation tag = new ResourceLocation("forge", "seeds");
+        return (itemStack.getItem().getTags().contains(tag));
+    }
 
-    private void doHarvest(ArrayList<BlockPos> blocks, ArrayList<BlockPos> hoards) {
+    private boolean isCropSeed(BlockState blockState, ItemStack itemStack) {
+        CropsBlock blk = (CropsBlock) blockState.getBlock();
+        Item cropSeed = blk.getItem(world, pos, blockState).getItem();
+        return isSeedy(itemStack) || cropSeed == itemStack.getItem();
+    }
+
+    private boolean isValidCropBlock(BlockPos pos) {
+        return world.isBlockPresent(pos) && world.getBlockState(pos).getBlock() instanceof CropsBlock;
+    }
+
+    private boolean isValidHoardBlock(BlockPos pos) {
+        return world.isBlockPresent(pos) && world.getBlockState(pos).getBlock() instanceof SpriteHoardBlock;
+    }
+
+    private void doHarvest(ArrayList<BlockPos> harvestableBlocks, ArrayList<BlockPos> hoardList) {
         int harvestCount = 0;
 
-        for (BlockPos pos : blocks) {
-            if (harvestCount++ > harvestLimit && harvestLimit != 0.0) return;
+        for (BlockPos pos : harvestableBlocks) {
+            if ((harvestCount++ > harvestLimit && harvestLimit != 0.0) || !isValidCropBlock(pos)) return;
 
             BlockState blockState = world.getBlockState(pos);
 
             CropsBlock blk = (CropsBlock) blockState.getBlock();
             Item cropSeed = blk.getItem(world, pos, blockState).getItem();
             needToReplant = true;
+
             Block.getDrops(blockState, (ServerWorld) world, pos, (TileEntity) null).forEach(itemStack -> {
-                if (itemStack.getItem() == cropSeed && needToReplant) {
+                //LOGGER.debug("Harvesting "+itemStack.getCount()+" "+itemStack.getItem().toString()+" at ("+pos.getX()+", "+pos.getZ()+"), Has a seed tag: "+isSeedy(itemStack)+", Seed is the crop: "+(itemStack.getItem() == cropSeed)+", isFood: "+cropSeed.isFood()+" cropSeed: "+cropSeed.toString());
+                if (isCropSeed(blockState, itemStack) && needToReplant) {
                     needToReplant = false;
                     // Deduct one seed from the drops to account for replanting
                     if (!Config.SUPPRESS_SEED_DROPS.get() || cropSeed.isFood()) {
                         itemStack.shrink(1);
                     }
                 }
+
                 // HACK : Since some crops are their own seeds (i.e. carrots, potatoes), we need to allow them to drop
                 // even if SUPPRESS_SEED_DROPS is set
-                if (!Config.SUPPRESS_SEED_DROPS.get() || itemStack.getItem() != cropSeed || cropSeed.isFood()) {
-                    for (BlockPos p : hoards) {
-                        SpriteHoardTile spriteHordeTile = (SpriteHoardTile) world.getTileEntity(p);
-                        if (spriteHordeTile != null) {
-                            itemStack = putStackInInventoryAllSlots(spriteHordeTile, itemStack);
-                            if (itemStack.isEmpty()) break;
+                if ((!Config.SUPPRESS_SEED_DROPS.get() || itemStack.getItem() != cropSeed || cropSeed.isFood()) && !itemStack.isEmpty()) {
+                    for (BlockPos p : hoardList) {
+                        if (isValidHoardBlock(p)) {
+                            SpriteHoardTile spriteHordeTile = (SpriteHoardTile) world.getTileEntity(p);
+                            if (spriteHordeTile != null) {
+                                itemStack = putStackInInventoryAllSlots(spriteHordeTile, itemStack);
+                                if (itemStack.isEmpty()) break;
+                            }
                         }
                     }
                     if (!itemStack.isEmpty()) {
