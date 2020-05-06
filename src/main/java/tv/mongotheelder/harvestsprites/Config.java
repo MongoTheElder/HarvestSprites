@@ -8,7 +8,7 @@ import net.minecraftforge.fml.config.ModConfig;
 @Mod.EventBusSubscriber
 public class Config {
     public static final String CATEGORY_ITEMS = "harvest_sprites";
-    public static final String SPRITE_LAMP_ITEMS = "sprite_lamp.json";
+    public static final String SPRITE_LAMP_ITEMS = "sprite_lamp";
     public static final String SPRITE_HOARD_ITEMS = "sprite_hoard";
     public static final String ENVIRONMENT_ITEMS = "environment";
 
@@ -49,16 +49,18 @@ public class Config {
                 .defineInRange("harvest_range", 4, 0, 8);
         HARVEST_HEIGHT = COMMON_BUILDER.comment("Harvest range above/below lamp")
                 .defineInRange("harvest_height", 3, 1, 4);
+        COMMON_BUILDER.pop();
 
-        COMMON_BUILDER.pop().comment("Sprite Lamp settings").push(SPRITE_HOARD_ITEMS);
+        COMMON_BUILDER.comment("Sprite Hoard settings").push(SPRITE_HOARD_ITEMS);
         HOARD_RANGE = COMMON_BUILDER.comment("Hoard search range surrounding lamp. 0 will only search the block under/over the lamp")
                 .defineInRange("hoard_range", 5, 0, 10);
         HOARD_HEIGHT = COMMON_BUILDER.comment("Hoard search range above/below lamp")
                 .defineInRange("hoard_height", 3, 1, 6);
         RANDOMIZE_HOARDS = COMMON_BUILDER.comment("Choose a random Sprite Hoard each time a crop is harvested")
                 .define("randomize_hoards", true);
+        COMMON_BUILDER.pop();
 
-        COMMON_BUILDER.pop().comment("Environment settings").push(ENVIRONMENT_ITEMS);
+        COMMON_BUILDER.comment("Environment settings").push(ENVIRONMENT_ITEMS);
         ENABLE_LIGHT = COMMON_BUILDER.comment("Sprite Lamp emits light when active")
                 .define("enable_light", true);
         TICKS_PER_CYCLE = COMMON_BUILDER.comment("Number of game ticks between harvest cycles. Raising this value increases the time between harvest cycles")
