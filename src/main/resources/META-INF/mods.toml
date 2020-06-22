@@ -14,7 +14,7 @@ issueTrackerURL="https://github.com/MongoTheElder/harvestsprites/" #optional
 # The modid of the mod
 modId="harvestsprites" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="1.15.2-1.0.0" #mandatory
+version="1.15.2-1.1.0" #mandatory
  # A display name for the mod
 displayName="Harvest Sprites" #mandatory
 # A text field displayed in the mod UI
@@ -23,12 +23,12 @@ credits="Thanks to all Minecraft modders" #optional
 authors="MongoTheElder" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Harvest Sprites - Recruit sprites to help harvesting crops
+Harvest Sprites - Recruit sprites to help harvesting crops in exchange for food
 
 
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
-[[dependencies.examplemod]] #optional
+[[dependencies.harvestsprites]] #optional
     # the modid of the dependency
     modId="forge" #mandatory
     # Does this dependency have to exist - if not, ordering below must be specified
@@ -40,7 +40,7 @@ Harvest Sprites - Recruit sprites to help harvesting crops
     # Side this dependency is applied on - BOTH, CLIENT or SERVER
     side="BOTH"
 # Here's another dependency
-[[dependencies.examplemod]]
+[[dependencies.harvestsprites]]
     modId="minecraft"
     mandatory=true
     versionRange="[1.15.2]"
