@@ -25,6 +25,7 @@ public class Config {
     public static ForgeConfigSpec.IntValue HOARD_HEIGHT;
     public static ForgeConfigSpec.BooleanValue ENABLE_LIGHT;
     public static ForgeConfigSpec.BooleanValue RANDOMIZE_HOARDS;
+    public static ForgeConfigSpec.BooleanValue EMIT_REDSTONE;
 
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
@@ -63,6 +64,8 @@ public class Config {
         COMMON_BUILDER.comment("Environment settings").push(ENVIRONMENT_ITEMS);
         ENABLE_LIGHT = COMMON_BUILDER.comment("Sprite Lamp emits light when active")
                 .define("enable_light", true);
+        EMIT_REDSTONE = COMMON_BUILDER.comment("Sprite Lamp emits a redstone signal proportional to the amount of food in the inventory")
+                .define("emit_redstone", true);
         TICKS_PER_CYCLE = COMMON_BUILDER.comment("Number of game ticks between harvest cycles. Raising this value increases the time between harvest cycles")
                 .defineInRange("ticks_per_cycle", 4, 1, 800);
 

@@ -12,6 +12,7 @@ import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -105,4 +106,31 @@ public class SpriteLampBlock extends Block {
     public int getLightValue(BlockState state) {
         return state.get(BlockStateProperties.POWERED) && Config.ENABLE_LIGHT.get() ? super.getLightValue(state) : 0;
     }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean canProvidePower(BlockState state) {
+        return Config.EMIT_REDSTONE.get();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public int getWeakPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
+        if (!Config.EMIT_REDSTONE.get()) return 0;
+
+        SpriteLampTile te = (SpriteLampTile) blockAccess.getTileEntity(pos);
+        if (te == null) return 0;
+        return te.getLampRedstoneLevel();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public int getStrongPower(BlockState blockState, IBlockReader blockAccess, BlockPos pos, Direction side) {
+        return getWeakPower(blockState, blockAccess, pos, side) > 0 ? 15 : 0;
+    }
+
+    public void notifyNeighbors(World world, BlockPos pos) {
+        world.notifyNeighborsOfStateChange(pos, this);
+    }
+
 }

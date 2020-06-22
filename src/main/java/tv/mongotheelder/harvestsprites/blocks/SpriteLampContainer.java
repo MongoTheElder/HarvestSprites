@@ -4,9 +4,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -49,12 +47,14 @@ public class SpriteLampContainer extends Container {
             itemstack = stack.copy();
             if (index == 0) {
                 if (!this.mergeItemStack(stack, 1, 37, true)) {
+                    tileEntity.foodChanged();
                     return ItemStack.EMPTY;
                 }
                 slot.onSlotChange(stack, itemstack);
             } else {
                 if (stack.getItem().isFood()) {
                     if (!this.mergeItemStack(stack, 0, 1, false)) {
+                        tileEntity.foodChanged();
                         return ItemStack.EMPTY;
                     }
                 } else if (index < 28) {

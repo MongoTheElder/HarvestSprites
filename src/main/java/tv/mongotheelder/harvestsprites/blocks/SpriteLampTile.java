@@ -49,6 +49,7 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
     private int tickCount = 0;
     private boolean needToReplant;
     private float progress;
+    private int lampRedstoneLevel;
 
     public SpriteLampTile() {
         super(Registration.SPRITE_LAMP_TILE.get());
@@ -131,6 +132,12 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         }
     }
 
+    public void foodChanged() {
+        if (world == null) return;
+        SpriteLampBlock block = (SpriteLampBlock) world.getBlockState(pos).getBlock();
+        block.notifyNeighbors(world, pos);
+    }
+
     private void consumeFood() {
         if (foodCounter <= 0 && Config.FOOD_CONSUMPTION_RATE.get() > 0) {
             handler.ifPresent(h -> {
@@ -141,9 +148,20 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
                     foodMaxValue = food.getHealing() * Config.FOOD_CONSUMPTION_RATE.get();
                     foodCounter = foodMaxValue;
                     harvestLimit = food.getSaturation() * Config.HARVEST_RATE.get();
+                    foodChanged();
                 }
             });
         }
+    }
+
+    public int getLampRedstoneLevel() {
+        lampRedstoneLevel = 0;
+        handler.ifPresent(h -> {
+            ItemStack stack = h.getStackInSlot(0);
+            // This makes sure that any food present in the stack has a redstone value of at least 1
+            lampRedstoneLevel = stack.getCount() == 0 ? 0 : (int) Math.floor((stack.getCount() - 1) * 15f / stack.getMaxStackSize()) + 1;
+        });
+        return lampRedstoneLevel;
     }
 
     private boolean isSeedy(ItemStack itemStack) {
@@ -294,6 +312,7 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
 
             @Override
             protected void onContentsChanged(int slot) {
+                foodChanged();
                 markDirty();
             }
 
