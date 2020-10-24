@@ -2,12 +2,11 @@ package tv.mongotheelder.harvestsprites.blocks;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.item.ItemStack;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
@@ -26,11 +25,11 @@ import org.apache.logging.log4j.Logger;
 import tv.mongotheelder.harvestsprites.Config;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Random;
 
 public class SpriteLampBlock extends Block {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final BooleanProperty CAN_EMIT_LIGHT = BooleanProperty.create("can_emit_light");
 
     public SpriteLampBlock(Properties properties) {
         super(properties);
@@ -62,37 +61,20 @@ public class SpriteLampBlock extends Block {
     }
 
     @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-        int minX = pos.getX() - 9;
-        int maxX = pos.getX() + 9;
-        int maxY = pos.getY() + 3;
-        int minY = pos.getY() - 3;
-        int minZ = pos.getZ() - 9;
-        int maxZ = pos.getZ() + 9;
-        ArrayList<BlockPos> blocks = new ArrayList();
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    BlockPos target = new BlockPos(x, y, z);
-                    if (worldIn.isBlockPresent(target)) {
-                        if (worldIn.getBlockState(target).getBlock() instanceof SpriteLampBlock) {
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(BlockStateProperties.POWERED);
+        builder.add(BlockStateProperties.POWERED, CAN_EMIT_LIGHT);
     }
 
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+
+        // HACK ALERT: Do to the change in the way block light emission works in 1.16+, needed to add a block state to
+        // track the config item since the light levels are determined for all block state combinations
+        // during registration before the config is available.
+        if (Config.ENABLE_LIGHT.get() != stateIn.get(CAN_EMIT_LIGHT)) {
+            worldIn.setBlockState(pos, stateIn.with(CAN_EMIT_LIGHT, Config.ENABLE_LIGHT.get()));
+        }
+
         if (stateIn.get(BlockStateProperties.POWERED)) {
             double d0 = (double) pos.getX() + 0.5D;
             double d1 = (double) pos.getY() + 0.55D;
@@ -101,10 +83,8 @@ public class SpriteLampBlock extends Block {
         }
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public int getLightValue(BlockState state) {
-        return state.get(BlockStateProperties.POWERED) && Config.ENABLE_LIGHT.get() ? super.getLightValue(state) : 0;
+    public static int getLightValue(BlockState state, int lightLevel) {
+        return state.get(BlockStateProperties.POWERED) && state.get(CAN_EMIT_LIGHT) ? lightLevel : 0;
     }
 
     @SuppressWarnings("deprecation")

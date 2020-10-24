@@ -13,7 +13,7 @@ import tv.mongotheelder.harvestsprites.setup.*;
 public class HarvestSprites {
     public static final String MODID = "harvestsprites";
 
-    public static IProxy proxy = DistExecutor.runForDist(() -> () -> new ClientProxy(), () -> () -> new ServerProxy());
+    public static IProxy proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> ServerProxy::new);
 
     private static final Logger LOGGER = LogManager.getLogger();
 

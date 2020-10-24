@@ -15,7 +15,7 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import tv.mongotheelder.harvestsprites.setup.Registration;
@@ -41,8 +41,7 @@ public class SpriteHoardTile extends LockableLootTileEntity {
         return compound;
     }
 
-    public void read(CompoundNBT compound) {
-        super.read(compound);
+    public void read(BlockState state, CompoundNBT compound) {
         this.hoardContents = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
         if (!this.checkLootAndRead(compound)) {
             ItemStackHelper.loadAllItems(compound, this.hoardContents);
@@ -110,7 +109,6 @@ public class SpriteHoardTile extends LockableLootTileEntity {
 
             boolean flag = blockstate.get(BarrelBlock.PROPERTY_OPEN);
             if (flag) {
-                //this.playSound(blockstate, SoundEvents.BLOCK_BARREL_CLOSE);
                 this.setOpenProperty(blockstate, false);
             }
         }
@@ -127,7 +125,7 @@ public class SpriteHoardTile extends LockableLootTileEntity {
     }
 
     private void playSound(BlockState blockState, SoundEvent soundEvent) {
-        Vec3i vec3i = blockState.get(BarrelBlock.PROPERTY_FACING).getDirectionVec();
+        Vector3i vec3i = blockState.get(BarrelBlock.PROPERTY_FACING).getDirectionVec();
         double d0 = (double)this.pos.getX() + 0.5D + (double)vec3i.getX() / 2.0D;
         double d1 = (double)this.pos.getY() + 0.5D + (double)vec3i.getY() / 2.0D;
         double d2 = (double)this.pos.getZ() + 0.5D + (double)vec3i.getZ() / 2.0D;

@@ -27,8 +27,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import tv.mongotheelder.harvestsprites.Config;
 import tv.mongotheelder.harvestsprites.setup.Registration;
 
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class SpriteLampTile extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private LazyOptional<IItemHandler> handler = LazyOptional.of(this::createHandler);
 
@@ -48,7 +46,6 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
     private boolean done;
     private int tickCount = 0;
     private boolean needToReplant;
-    private float progress;
     private int lampRedstoneLevel;
 
     public SpriteLampTile() {
@@ -67,22 +64,6 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         if (active != blockState.get(BlockStateProperties.POWERED)) {
             world.setBlockState(pos, blockState.with(BlockStateProperties.POWERED, active), 3);
         }
-    }
-
-    public void setProgress(float progress) {
-        this.progress = Math.max(0.0F, progress);
-    }
-
-    public void setProgress(long counter, long maxCount) {
-        setProgress(maxCount > 0 ? counter*1.0F / maxCount : 0.0F);
-    }
-
-    public float getProgress() {
-        return progress;
-    }
-
-    public void updateProgress(float progress) {
-        //PacketHandler.HANDLER.send(PacketDistributor.TRACKING_CHUNK.with(() -> world.getChunkAt(pos)), new ProgressPacket(pos, progress));
     }
 
     @Override
@@ -127,8 +108,6 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
             // Randomize the list of harvestable blocks
             Collections.shuffle(harvestableCropPositions);
             doHarvest(harvestableCropPositions, hoardList);
-            setProgress(foodCounter, foodMaxValue);
-            updateProgress(progress);
         }
     }
 
@@ -196,7 +175,6 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
             needToReplant = true;
 
             Block.getDrops(blockState, (ServerWorld) world, pos, (TileEntity) null).forEach(itemStack -> {
-                //LOGGER.debug("Harvesting "+itemStack.getCount()+" "+itemStack.getItem().toString()+" at ("+pos.getX()+", "+pos.getZ()+"), Has a seed tag: "+isSeedy(itemStack)+", Seed is the crop: "+(itemStack.getItem() == cropSeed)+", isFood: "+cropSeed.isFood()+" cropSeed: "+cropSeed.toString());
                 if (isCropSeed(blockState, itemStack) && needToReplant) {
                     needToReplant = false;
                     // Deduct one seed from the drops to account for replanting
@@ -229,21 +207,18 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         }
     }
 
-    @SuppressWarnings("deprecation")
     private ArrayList<BlockPos> getHarvestableCropPositions() {
-        int minX = pos.getX() - Config.HARVEST_RANGE.get();
-        int maxX = pos.getX() + Config.HARVEST_RANGE.get();
-        int minY = pos.getY() - Config.HARVEST_HEIGHT.get();
-        int maxY = pos.getY() + Config.HARVEST_HEIGHT.get();
-        int minZ = pos.getZ() - Config.HARVEST_RANGE.get();
-        int maxZ = pos.getZ() + Config.HARVEST_RANGE.get();
+        int range = Config.HARVEST_RANGE.get();
+        int vRange = Config.HARVEST_HEIGHT.get();
+        BlockPos minCorner = pos.add(-range, -vRange, -range);
+        BlockPos maxCorner = pos.add(range, vRange, range);
         ArrayList<BlockPos> blocks = new ArrayList();
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    BlockPos target = new BlockPos(x, y, z);
-                    if (world.isBlockLoaded(target)) {
+        if (world != null && world.isAreaLoaded(pos, range)) {
+            for (int x = minCorner.getX(); x <= maxCorner.getX(); x++) {
+                for (int z = minCorner.getZ(); z <= maxCorner.getZ(); z++) {
+                    for (int y = minCorner.getY(); y <= maxCorner.getY(); y++) {
+                        BlockPos target = new BlockPos(x, y, z);
                         BlockState blockState = world.getBlockState(target);
                         if (blockState.getBlock() instanceof CropsBlock) {
                             if (((CropsBlock) blockState.getBlock()).isMaxAge(blockState)) {
@@ -258,20 +233,17 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         return blocks;
     }
 
-    @SuppressWarnings("deprecation")
     private ArrayList<BlockPos> locateHoards() {
-        int minX = pos.getX() - Config.HOARD_RANGE.get();
-        int maxX = pos.getX() + Config.HOARD_RANGE.get();
-        int minY = pos.getY() - Config.HOARD_HEIGHT.get();
-        int maxY = pos.getY() + Config.HOARD_HEIGHT.get();
-        int minZ = pos.getZ() - Config.HOARD_RANGE.get();
-        int maxZ = pos.getZ() + Config.HOARD_RANGE.get();
+        int range = Config.HOARD_RANGE.get();
+        int vRange = Config.HOARD_HEIGHT.get();
+        BlockPos minCorner = pos.add(-range, -vRange, -range);
+        BlockPos maxCorner = pos.add(range, vRange, range);
         ArrayList<BlockPos> blocks = new ArrayList();
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    BlockPos target = new BlockPos(x, y, z);
-                    if (world.isBlockLoaded(target)) {
+        if (world != null && world.isAreaLoaded(pos, range)) {
+            for (int x = minCorner.getX(); x <= maxCorner.getX(); x++) {
+                for (int z = minCorner.getZ(); z <= maxCorner.getZ(); z++) {
+                    for (int y = minCorner.getY(); y <= maxCorner.getY(); y++) {
+                        BlockPos target = new BlockPos(x, y, z);
                         BlockState blockState = world.getBlockState(target);
                         if (blockState.getBlock() == Registration.SPRITE_HOARD.get()) {
                             blocks.add(target);
@@ -284,14 +256,14 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
     }
 
     @Override
-    public void read(CompoundNBT tag) {
+    public void read(BlockState state, CompoundNBT tag) {
         CompoundNBT invTag = tag.getCompound("inventory");
         handler.ifPresent(h -> ((INBTSerializable<CompoundNBT>) h).deserializeNBT(invTag));
 
         foodCounter = tag.getLong("food_counter");
         foodMaxValue = tag.getLong("food_max_value");
         harvestLimit = tag.getFloat("harvest_limit");
-        super.read(tag);
+        super.read(state, tag);
     }
 
     @Override

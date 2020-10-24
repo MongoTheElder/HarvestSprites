@@ -36,8 +36,6 @@ public class SpriteLampContainer extends Container {
         return isWithinUsableDistance(IWorldPosCallable.of(tileEntity.getWorld(), tileEntity.getPos()), playerEntity, Registration.SPRITE_LAMP.get());
     }
 
-    public float getFoodToGo() { return tileEntity.getProgress(); }
-
     @Override
     public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
