@@ -83,9 +83,7 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
         if (foodCounter <= 0) {
             handler.ifPresent(h -> {
                 ItemStack stack = h.getStackInSlot(0);
-                if (stack.isEmpty()) {
-                    done = !(Config.FOOD_CONSUMPTION_RATE.get() == 0);
-                }
+                done = stack.isEmpty();
             });
         }
         if (done) return;
@@ -118,13 +116,13 @@ public class SpriteLampTile extends TileEntity implements ITickableTileEntity, I
     }
 
     private void consumeFood() {
-        if (foodCounter <= 0 && Config.FOOD_CONSUMPTION_RATE.get() > 0) {
+        if (foodCounter <= 0) {
             handler.ifPresent(h -> {
                 ItemStack stack = h.getStackInSlot(0);
                 if (stack.getItem().isFood()) {
                     Food food = stack.getItem().getFood();
-                    h.extractItem(0, 1, false);
-                    foodMaxValue = food.getHealing() * Config.FOOD_CONSUMPTION_RATE.get();
+                    if (Config.FOOD_CONSUMPTION_RATE.get() > 0) h.extractItem(0, 1, false);
+                    foodMaxValue = food.getHealing() * Math.max(Config.FOOD_CONSUMPTION_RATE.get(), 1);
                     foodCounter = foodMaxValue;
                     harvestLimit = food.getSaturation() * Config.HARVEST_RATE.get();
                     foodChanged();
